@@ -1,0 +1,37 @@
+parameters:
+- name: Environment
+  type: string
+- name: ServiceConnection
+  type: string
+- name: ApimEnvironment
+  type: string
+  values:
+  - Development
+  - Test
+  - Oat
+  - Production
+- name: ProductName
+  type: string
+- name: ProductGroupNames
+  type: string
+  default: Developers
+- name: RequiresApproval
+  type: boolean
+  default: true
+
+jobs:
+- deployment:  CreateProductOn${{ parameters.Environment }}
+  displayName: "Create product on ${{ parameters.Environment }}"
+  environment: "Digital Forms - ${{ parameters.Environment }}"
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - task: TechTransformationEAPIMTeam.Eapim-BuildnRelease.Eapim.APIManageProduct.EapimManageProductRelease@1
+          displayName: 'Create EAPIM Product'
+          inputs:
+            azureSubscription: '${{ parameters.ServiceConnection }}'
+            ProductName: '${{ parameters.ProductName }}'
+            ProductGroupNames: ${{ parameters.ProductGroupNames }}
+            RequiresApproval: ${{ parameters.RequiresApproval }}
+            APIEnvironment: ${{ parameters.ApimEnvironment }}

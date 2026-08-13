@@ -1,0 +1,60 @@
+stages:
+  - stage: BuildAndTest
+    displayName: 'Build And Test'
+    jobs:
+      - job: TestArmTemplates
+        displayName: Test and publish ARM templates
+        steps:
+        - task: AzurePowerShell@4
+          displayName: 'Test ARM templates'
+          inputs:
+            azureSubscription: 's255d.azdo.deployment'
+            scriptType: filePath
+            scriptPath: '$(System.DefaultWorkingDirectory)/ArmTemplates/Scripts/Test-ArmTemplate.ps1'
+            scriptArguments: -ResourceGroup 's255d01rg-uks-tpltest01' -BaseDirectory '$(System.DefaultWorkingDirectory)/ArmTemplates/Templates' -Verbose
+            azurePowerShellVersion: LatestVersion
+
+        - task: PublishPipelineArtifact@1
+          displayName: Publish Pipeline Artifact
+          inputs:
+            artifactName: 'DigitalForms.ArmTemplates.ExternalApi'
+            targetPath: '$(System.DefaultWorkingDirectory)\ARMTemplates'
+
+      - job: BuildAndTest
+        variables:
+        - name: projects
+          value: '**/*.csproj'
+
+        steps:
+        - task: UseDotNet@2
+          inputs:
+            packageType: 'sdk'
+            version: '8.x'
+
+        - task: DotNetCoreCLI@2
+          displayName: 'Restore'
+          inputs:
+              command: 'restore'
+              includeNuGetOrg: true
+              projects: 'Digital-Forms-Service/**/*.csproj'
+
+        - task: DotNetCoreCLI@2
+          displayName: 'Build'
+          inputs:
+              command: 'build'
+              projects: 'Digital-Forms-Service/DigitalForms.API/DigitalForms.API.csproj'
+              arguments: '--no-restore --configuration Release'
+
+        - task: DotNetCoreCLI@2
+          displayName: 'Publish Binaries to Artifact Staging Dir'
+          inputs:
+              command: 'publish'
+              publishWebProjects: false
+              projects: 'Digital-Forms-Service/DigitalForms.API/DigitalForms.API.csproj'
+              arguments: '--output $(Build.ArtifactStagingDirectory) --no-restore --no-build --configuration Release'
+
+        - task: PublishBuildArtifacts@1
+          displayName: Publish Pipeline Artifacts
+          inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)\DigitalForms.API.zip'
+              ArtifactName: 'digital-form-api_$(Build.BuildNumber)'

@@ -1,0 +1,23 @@
+variables:
+  ResourcePrefix: s255t02
+  AzureSubscription: "c4542a65-affe-40bb-a9c0-33fc31feb3c9"
+  # EAPIM settings for the EAPIM Service Connection,  API name and Api Version
+  EAPIMServiceConnection: 'C106 - API Management Service (EAPIM)'
+  EAPIMEnvironment: Oat
+  AzureServiceConnection: 's255t.azdo.deployment'
+  ProductName: 'Digital Forms'
+  ExternalApiVersion: v1
+  ExternalApiName: digital-forms-api
+
+  # EAPIM Ip Config - comma-separated list of ip addresses
+  EapimIpAddresses: '40.118.43.205'
+  WAFIPAddress: '20.238.146.164/32'
+  FauAPIIPAddress: '40.118.0.173/32'
+
+  #Environment
+  EnvironmentTag: PreProduction
+
+  # Name of AKV secret
+  # externalApiCertName: preprod-externalapi-digital-forms-education-gov-uk #To Be Updated
+  # externalapiCustomDomain: preprod.externalapi.digital-forms.education.gov.uk #To Be Updated
+  # externalapiCertThumbprint: C362BCB847744F1788C8BB70957CA28110766607 #To Be Updated

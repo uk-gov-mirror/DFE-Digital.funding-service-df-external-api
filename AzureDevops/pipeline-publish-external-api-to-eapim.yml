@@ -1,0 +1,114 @@
+pool:
+  vmImage: 'windows-latest'
+
+trigger: none
+
+variables:
+  SwaggerDefinitionFile: $(Pipeline.Workspace)\df-external-api-definition-$(Build.BuildNumber).json
+
+stages:
+- stage: PublishArtefacts
+  jobs:
+  - job: PublishArtefacts
+    displayName: Publish Artefacts
+    steps:
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Pipeline Artifact
+      inputs:
+        artifactName: 'FundingDataService.ArmTemplates.Scripts'
+        targetPath: '$(System.DefaultWorkingDirectory)\ARMTemplates\Scripts'
+
+    - task: PublishPipelineArtifact@1
+      displayName: Publish Pipeline Artifact
+      inputs:
+        artifactName: 'FundingDataService.ArmTemplates.EAPIMPolicies'
+        targetPath: '$(System.DefaultWorkingDirectory)\ARMTemplates\EAPIMPolicies'
+
+- stage: DeployToDev
+  variables:
+  - template: variableTemplates\dev.yml
+  - template: variableTemplates\shared.yml
+  jobs:
+  - template: jobTemplates\update-versioned-api-definition.yml
+    parameters:
+      UpdateAppServiceFirewall:  true
+      Environment: Dev
+      EAPIMServiceConnection: ${{ variables.EAPIMServiceConnection }}
+      AzureServiceConnection: ${{ variables.AzureServiceConnection }}
+      ApimEnvironment: ${{ variables.EAPIMEnvironment }}
+      ProductName: ${{ variables.ProductName }}
+      PublisherEmailAddress: ${{ variables.ExternalApiPublishUsername }}
+      ApiName: ${{ variables.ExternalApiName }}
+      ApiAppServiceName: $(ExternalApiAppServiceName)
+      ApiResourceGroup: $(AppServicesResouceGroupName)
+      ApiVersion: '${{ variables.ExternalApiVersion }}'
+      ApiPath: ${{ variables.ExternalApiName }}
+      ApiSwaggerDocument:  ${{ variables.SwaggerDefinitionFile }}
+      ApiPolicyDocument:  $(Pipeline.Workspace)/FundingDataService.ArmTemplates.EAPIMPolicies/default-policy.xml
+
+# - stage: DeployToTest
+#   variables:
+#   - template: variableTemplates\test.yml
+#   - template: variableTemplates\shared.yml
+#   jobs:
+#   - template: jobTemplates\update-versioned-api-definition.yml
+#     parameters:
+#       UpdateAppServiceFirewall:  true
+#       Environment: Test
+#       EAPIMServiceConnection: ${{ variables.EAPIMServiceConnection }}
+#       AzureServiceConnection: ${{ variables.AzureServiceConnection }}
+#       ApimEnvironment: ${{ variables.EAPIMEnvironment }}
+#       ProductName: ${{ variables.ProductName }}
+#       PublisherEmailAddress: ${{ variables.ExternalApiPublishUsername }}
+#       ApiName: ${{ variables.ExternalApiName }}
+#       ApiAppServiceName: $(ExternalApiAppServiceName)
+#       ApiResourceGroup: $(AppServicesResouceGroupName)
+#       ApiVersion: '${{ variables.ExternalApiVersion }}'
+#       ApiPath: ${{ variables.ExternalApiName }}
+#       ApiSwaggerDocument:  ${{ variables.SwaggerDefinitionFile }}
+#       ApiPolicyDocument:  $(Pipeline.Workspace)/FundingDataService.ArmTemplates.EAPIMPolicies/default-policy.xml
+
+
+# - stage: DeployToPreProd
+#   variables:
+#   - template: variableTemplates\preprod.yml
+#   - template: variableTemplates\shared.yml
+#   jobs:
+#   - template: jobTemplates\update-versioned-api-definition.yml
+#     parameters:
+#       UpdateAppServiceFirewall:  true
+#       Environment: PreProduction
+#       EAPIMServiceConnection: ${{ variables.EAPIMServiceConnection }}
+#       AzureServiceConnection: ${{ variables.AzureServiceConnection }}
+#       ApimEnvironment: ${{ variables.EAPIMEnvironment }}
+#       ProductName: ${{ variables.ProductName }}
+#       PublisherEmailAddress: ${{ variables.ExternalApiPublishUsername }}
+#       ApiName: ${{ variables.ExternalApiName }}
+#       ApiAppServiceName: $(ExternalApiAppServiceName)
+#       ApiResourceGroup: $(AppServicesResouceGroupName)
+#       ApiVersion: '${{ variables.ExternalApiVersion }}'
+#       ApiPath: ${{ variables.ExternalApiName }}
+#       ApiSwaggerDocument:  ${{ variables.SwaggerDefinitionFile }}
+#       ApiPolicyDocument:  $(Pipeline.Workspace)/FundingDataService.ArmTemplates.EAPIMPolicies/default-policy.xml
+
+# - stage: DeployToProduction
+#   variables:
+#   - template: variableTemplates\prod.yml
+#   - template: variableTemplates\shared.yml
+#   jobs:
+#   - template: jobTemplates\update-versioned-api-definition.yml
+#     parameters:
+#       UpdateAppServiceFirewall:  true
+#       Environment: Production
+#       EAPIMServiceConnection: ${{ variables.EAPIMServiceConnection }}
+#       AzureServiceConnection: ${{ variables.AzureServiceConnection }}
+#       ApimEnvironment: ${{ variables.EAPIMEnvironment }}
+#       ProductName: ${{ variables.ProductName }}
+#       PublisherEmailAddress: ${{ variables.ExternalApiPublishUsername }}
+#       ApiName: ${{ variables.ExternalApiName }}
+#       ApiAppServiceName: $(ExternalApiAppServiceName)
+#       ApiResourceGroup: $(AppServicesResouceGroupName)
+#       ApiVersion: '${{ variables.ExternalApiVersion }}'
+#       ApiPath: ${{ variables.ExternalApiName }}
+#       ApiSwaggerDocument:  ${{ variables.SwaggerDefinitionFile }}
+#       ApiPolicyDocument:  $(Pipeline.Workspace)/FundingDataService.ArmTemplates.EAPIMPolicies/default-policy.xml

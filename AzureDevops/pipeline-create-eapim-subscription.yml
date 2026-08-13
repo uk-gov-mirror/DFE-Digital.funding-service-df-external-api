@@ -1,0 +1,59 @@
+pool:
+  vmImage: 'windows-latest'
+
+trigger: none
+
+stages:
+# Note that we can't re-run stages that have already been ran, so we're just commenting them out for now
+- stage: DeployToDev
+  variables:
+  - template: variableTemplates\dev.yml
+  - template: variableTemplates\shared.yml
+  jobs:
+  - template: jobTemplates\create-eapim-subscription.yml
+    parameters:
+      Environment: Dev
+      ServiceConnection: ${{ variables.EAPIMServiceConnection }}
+      ProductName: ${{ variables.ProductName }}
+      ApimEnvironment: ${{ variables.EAPIMEnvironment }}
+      SubscriptionUserName: ${{ variables.ExternalApiSubscriptionUsername }}
+
+# - stage: DeployToTest
+#   variables:
+#   - template: variableTemplates\test.yml
+#   - template: variableTemplates\shared.yml
+#   jobs:
+#   - template: jobTemplates\create-eapim-subscription.yml
+#     parameters:
+#       Environment: Test
+#       ServiceConnection: ${{ variables.EAPIMServiceConnection }}
+#       ProductName: ${{ variables.ProductName }}
+#       ApimEnvironment: ${{ variables.EAPIMEnvironment }}
+#       SubscriptionUserName: ${{ variables.ExternalApiSubscriptionUsername }}
+
+# - stage: DeployToPreProd
+#   variables:
+#   - template: variableTemplates\preprod.yml
+#   - template: variableTemplates\shared.yml
+#   jobs:
+#   - template: jobTemplates\create-eapim-subscription.yml
+#     parameters:
+#       Environment: PreProduction
+#       ServiceConnection: ${{ variables.EAPIMServiceConnection }}
+#       ProductName: ${{ variables.ProductName }}
+#       ApimEnvironment: ${{ variables.EAPIMEnvironment }}
+#       SubscriptionUserName: ${{ variables.ExternalApiSubscriptionUsername }}
+
+# - stage: DeployToProduction
+#   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+#   variables:
+#   - template: variableTemplates\prod.yml
+#   - template: variableTemplates\shared.yml
+#   jobs:
+#   - template: jobTemplates\create-eapim-subscription.yml
+#     parameters:
+#       Environment: Production
+#       ServiceConnection: ${{ variables.EAPIMServiceConnection }}
+#       ProductName: ${{ variables.ProductName }}
+#       ApimEnvironment: ${{ variables.EAPIMEnvironment }}
+#       SubscriptionUserName: ${{ variables.ExternalApiSubscriptionUsername }}

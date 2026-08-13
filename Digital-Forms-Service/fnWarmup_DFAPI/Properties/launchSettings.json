@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "fnWarmup_DFAPI": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7181",
+      "launchBrowser": false
+    }
+  }
+}

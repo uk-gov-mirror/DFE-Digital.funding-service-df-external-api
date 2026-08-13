@@ -1,0 +1,23 @@
+variables:
+  # Public API configuration
+  AppServicesResouceGroupName: $(ResourcePrefix)rg-uks-df-app-services
+  SharedResourceGroupName: $(ResourcePrefix)rg-uks-df-shared  
+  ExternalApiAppServiceName: $(ResourcePrefix)as-df-external
+  ExternalApiAppServicePlanName: $(ResourcePrefix)asp-df-external
+  SharedKeyVaultName: $(ResourcePrefix)kv-df-shared
+  SharedAppInsightsName: $(ResourcePrefix)ai-df-shared
+  SharedLogAnalyticsName: $(ResourcePrefix)la-df-shared
+  SharedVirtualNetworkName: $(ResourcePrefix)vnet-df-shared
+  ExternalApiSubnetName: $(ResourcePrefix)subnet-df-external
+
+  # API set-up
+  ExternalApiPublishUsername: fundingdevops@education.gov.uk
+  ExternalApiSubscriptionUsername: fundingdevops@education.gov.uk
+
+  # Tags
+  ServiceTag: 'Funding and Allocations'
+  ServiceLineTag: 'Funding'
+  ParentBusinessTag: 'Funding and Allocations'
+  PortfolioTag: 'Education And Skills Funding Agency'
+  ProductTag: 'Funding Service - Digital Forms'
+  ServiceOfferingTag: 'Digital Forms'

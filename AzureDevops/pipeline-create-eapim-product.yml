@@ -1,0 +1,56 @@
+pool:
+  vmImage: 'windows-latest'
+
+trigger: none
+
+stages:
+- stage: DeployToDev
+  variables:
+  - template: variableTemplates\dev.yml
+  - template: variableTemplates\shared.yml
+  jobs:
+  - template: jobTemplates\create-eapim-product.yml
+    parameters:
+      Environment: Dev
+      ServiceConnection: ${{ variables.EAPIMServiceConnection }}
+      ProductName: ${{ variables.ProductName }}
+      ApimEnvironment: ${{ variables.EAPIMEnvironment }}
+
+# - stage: DeployToTest
+#   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+#   variables:
+#   - template: variableTemplates\test.yml
+#   - template: variableTemplates\shared.yml
+#   jobs:
+#   - template: jobTemplates\create-eapim-product.yml
+#     parameters:
+#       Environment: Test
+#       ServiceConnection: ${{ variables.EAPIMServiceConnection }}
+#       ProductName: ${{ variables.ProductName }}
+#       ApimEnvironment: ${{ variables.EAPIMEnvironment }}
+
+# - stage: DeployToPreProd
+#   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+#   variables:
+#   - template: variableTemplates\preprod.yml
+#   - template: variableTemplates\shared.yml
+#   jobs:
+#   - template: jobTemplates\create-eapim-product.yml
+#     parameters:
+#       Environment: PreProduction
+#       ServiceConnection: ${{ variables.EAPIMServiceConnection }}
+#       ProductName: ${{ variables.ProductName }}
+#       ApimEnvironment: ${{ variables.EAPIMEnvironment }}
+
+# - stage: DeployToProduction
+#   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+#   variables:
+#   - template: variableTemplates\prod.yml
+#   - template: variableTemplates\shared.yml
+#   jobs:
+#   - template: jobTemplates\create-eapim-product.yml
+#     parameters:
+#       Environment: Production
+#       ServiceConnection: ${{ variables.EAPIMServiceConnection }}
+#       ProductName: ${{ variables.ProductName }}
+#       ApimEnvironment: ${{ variables.EAPIMEnvironment }}

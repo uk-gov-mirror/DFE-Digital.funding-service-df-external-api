@@ -1,0 +1,572 @@
+﻿{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "environmentTag": {
+            "type": "string"
+        },
+        "parentBusinessTag": {
+            "type": "string"
+        },
+        "portfolioTag": {
+            "type": "string"
+        },
+        "productTag": {
+            "type": "string"
+        },
+        "serviceTag": {
+            "type": "string"
+        },
+        "serviceLineTag": {
+            "type": "string"
+        },
+        "serviceOfferingTag": {
+            "type": "string"
+        },
+        "sharedResourceGroupName": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().name]",
+            "metadata": {
+                "description": "Name of the resource group containing app insights, keyvault, etc.  Defaults to resource group being deployed to."
+            }
+        },
+        "applicationInsightsName": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource name of the application insights instance"
+            }
+        },
+        "keyVaultName": {
+            "type": "string",
+            "metadata": {
+                "description": "Resource name for the key vault"
+            }
+        },
+        "externalApiAppServicePlanName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the shared app service plan"
+            }
+        },
+        "externalApiAppServiceName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name for this app service"
+            }
+        },
+        "sharedVirtualNetworkName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name for the deployed virtual network"
+            }
+        },
+        "externalApiSubnetName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name for the subnet on the shared virtual network"
+            }
+        },
+        "sharedLogAnalyticsName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of the shared log analytics workspace"
+            }
+        },
+        "apimIpAddresses": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "A list of EAPIM ip addresses to whitelist"
+            }
+        },
+        // "externalapiCustomDomain": {
+        //     "type": "string",
+        //     "metadata": {
+        //         "description": "Custom DNS for the preview runner"
+        //     }
+        // },
+        // "externalapiCertThumbprint": {
+        //     "type": "string",
+        //     "metadata": {
+        //         "description": "The thumbprint of the SSL cert for the live runner's custom domain."
+        //     }
+        // },
+        // "externalApiCertName": {
+        //     "type": "string",
+        //     "metadata": {
+        //         "description": "External Api Cert Name"
+        //     }
+        // },
+        "WAFIPAddress": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "WAF ip addresses to whitelist"
+            }
+        },
+        "FauAPIIPAddress": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "FauAPI ip addresses to whitelist"
+            }
+        }
+    },
+    "variables": {
+        "fundingBuildingBlocksUrl": "https://raw.githubusercontent.com/SkillsFundingAgency/funding-platform-building-blocks/digitalForms/templates/",
+        "apimIpAddressesAsArray": "[split(parameters('apimIpAddresses'), ',')]",
+        "emptySecurityRules": [],
+        "copy": [
+            {
+                "name": "apimWhiteList",
+                "count": "[length(variables('apimIpAddressesAsArray'))]",
+                "input": {
+                "ipAddress": "[concat(variables('apimIpAddressesAsArray')[copyIndex('apimWhiteList')], '/32')]",
+                "action": "Allow",
+                "name": "[concat('eapim-ip-address-', copyIndex('apimWhiteList', 1))]"
+                }
+            }
+        ],
+        "defaultSecurityRules": [
+            {
+                "ipAddress": "81.134.140.20/32",
+                "action": "Allow",
+                "name": "DfE Coventry NAT Block A"
+            },
+            {
+                "ipAddress": "81.134.140.21/32",
+                "action": "Allow",
+                "name": "DfE Coventry NAT Block B"
+            },
+            {
+                "ipAddress": "81.134.140.22/32",
+                "action": "Allow",
+                "name": "DfE Coventry NAT Block C"
+            },
+            {
+                "ipAddress": "81.134.140.23/32",
+                "action": "Allow",
+                "name": "DfE Coventry NAT Block D"
+            },
+            {
+                "ipAddress": "81.134.140.24/32",
+                "action": "Allow",
+                "name": "DfE Coventry NAT Block E"
+            },
+            {
+                "ipAddress": "81.134.140.25/32",
+                "action": "Allow",
+                "name": "DfE Coventry NAT Block F"
+            },
+            {
+                "ipAddress": "81.134.140.26/32",
+                "action": "Allow",
+                "name": "DfE Coventry NAT Block G"
+            },
+            {
+                "ipAddress": "81.134.140.27/32",
+                "action": "Allow",
+                "name": "DfE Coventry NAT Block H"
+            },
+            {
+                "ipAddress": "81.134.140.28/32",
+                "action": "Allow",
+                "name": "DfE Coventry NAT Block I"
+            },
+            {
+                "ipAddress": "81.134.140.16/28",
+                "action": "Allow",
+                "name": "DfE Coventry Primary Range"
+            },
+            {
+                "name": "Global Protect 1",
+                "action": "Allow",
+                "ipAddress": "208.127.46.232/29"
+            },
+            {
+                "name": "Global Protect 2",
+                "action": "Allow",
+                "ipAddress": "208.127.46.240/28"
+            },
+            {
+                "name": "virtual network",
+                "action": "Allow",
+                "ipAddress": "192.168.0.0/24"
+            },
+            {
+                "name": "WAF IP",
+                "action": "Allow",
+                "ipAddress": "[parameters('WAFIPAddress')]"
+            },
+            {
+                "name": "FauAPI IP",
+                "action": "Allow",
+                "ipAddress": "[parameters('FauAPIIPAddress')]"
+            }
+        ]
+    },
+    "resources": [
+        {
+            "apiVersion": "2017-05-10",
+            "name": "externalApiAppService",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(variables('fundingBuildingBlocksUrl'),'app-service.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "environmentTag": {
+                        "value": "[parameters('environmentTag')]"
+                    },
+                    "parentBusinessTag": {
+                        "value": "[parameters('parentBusinessTag')]"
+                    },
+                    "portfolioTag": {
+                        "value": "[parameters('portfolioTag')]"
+                    },
+                    "productTag": {
+                        "value": "[parameters('productTag')]"
+                    },
+                    "serviceTag": {
+                        "value": "[parameters('serviceTag')]"
+                    },
+                    "serviceLineTag": {
+                        "value": "[parameters('serviceLineTag')]"
+                    },
+                    "serviceOfferingTag":{
+                        "value": "[parameters('serviceOfferingTag')]"
+                    },
+                    "appServiceName": {
+                        "value": "[parameters('externalApiAppServiceName')]"
+                    },
+                    "appServicePlanName": {
+                        "value": "[parameters('externalApiAppServicePlanName')]"
+                    },
+                    "appServicePlanResourceGroup": {
+                        "value": "[parameters('sharedResourceGroupName')]"
+                    },
+                    "appKind": {
+                        "value": "web"
+                    },
+                    "deployStagingSlot": {
+                        "value": false
+                    },
+                    "http20Enabled": {
+                        "value": true
+                    },
+                    "ipSecurityRestrictions": {
+                        "value": "[if(empty(parameters('apimIpAddresses')), variables('emptySecurityRules'),  concat(variables('defaultSecurityRules'), variables('apimWhiteList')))]"
+                    },
+                    "appServiceAppSettings": {
+                        "value": [
+                            {
+                                "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                                "value": "[reference(resourceId(parameters('sharedResourceGroupName'), 'Microsoft.Insights/components', parameters('applicationInsightsName')), '2015-05-01').InstrumentationKey]"
+                            },
+                            {
+                                "name": "APPINSIGHTS_PROFILERFEATURE_VERSION",
+                                "value": "1.0.0"
+                            },
+                            {
+                                "name": "APPINSIGHTS_SNAPSHOTFEATURE_VERSION",
+                                "value": "1.0.0"
+                            },
+                            {
+                                "name": "APPINSIGHTS_CONNECTION_STRING",
+                                "value": "[concat('InstrumentationKey=', reference(resourceId(parameters('sharedResourceGroupName'), 'Microsoft.Insights/components', parameters('applicationInsightsName')), '2015-05-01').InstrumentationKey,';IngestionEndpoint=https://uksouth-2.in.applicationinsights.azure.com/')]"
+                            },
+                            {
+                                "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
+                                "value": "~2"
+                            },
+                            {
+                                "name": "DiagnosticServices_EXTENSION_VERSION",
+                                "value": "~3"
+                            },
+                            {
+                                "name": "InstrumentationEngine_EXTENSION_VERSION",
+                                "value": "disabled"
+                            },
+                            {
+                                "name": "SnapshotDebugger_EXTENSION_VERSION",
+                                "value": "disabled"
+                            },
+                            {
+                                "name": "XDT_MicrosoftApplicationInsights_BaseExtensions",
+                                "value": "disabled"
+                            },
+                            {
+                                "name": "XDT_MicrosoftApplicationInsights_Java",
+                                "value": "1"
+                            },
+                            {
+                                "name": "XDT_MicrosoftApplicationInsights_Mode",
+                                "value": "recommended"
+                            },
+                            {
+                                "name": "XDT_MicrosoftApplicationInsights_NodeJS",
+                                "value": "1"
+                            },
+                            {
+                                "name": "XDT_MicrosoftApplicationInsights_PreemptSkd",
+                                "value": "disabled"
+                            },
+                            {
+                                "name": "WEBSITE_RUN_FROM_PACKAGE",
+                                "value": "1"
+                            },
+                            {
+                                "name": "WEBSITE_TIME_ZONE",
+                                "value": "GMT Standard Time"
+                            },
+                            {
+                                "name": "WEBSITE_ADD_SITENAME_BINDINGS_IN_APPHOST_CONFIG",
+                                "value": 1
+                            },
+                            {
+                                "name": "ConnectionStrings:DFSqlDb",
+                                "value": "[concat('@Microsoft.KeyVault(VaultName=', parameters('keyVaultName'), ';SecretName=SharedDatabaseConnectionString)')]"
+                            },
+                            {
+                                "name": "Logging:LogLevel:Default",
+                                "value": "Information"
+                            },
+                            {
+                                "name": "Logging:LogLevel:Microsoft.AspNetCore",
+                                "value": "Warning"
+                            },
+                            {
+                                "name": "Logging:LogLevel:Microsoft.EntityFrameworkCore.Database.Command",
+                                "value": "Warning"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "apiVersion": "2017-05-10",
+            "name": "externalApiAppKvAccessPolicy",
+            "resourceGroup": "[parameters('sharedResourceGroupName')]",
+            "type": "Microsoft.Resources/deployments",
+            "dependsOn": [
+                "externalApiAppService"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(variables('fundingBuildingBlocksUrl'),'keyvault-accesspolicies.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "keyVaultName": {
+                        "value": "[parameters('keyVaultName')]"
+                    },
+                    "accessPolicies": {
+                        "value": [
+                            {
+                                "tenantId": "[subscription().tenantId]",
+                                "objectId": "[reference('externalApiAppService').outputs.managedServiceIdentityId.value]",
+                                "permissions": {
+                                    "secrets": [
+                                        "list",
+                                        "get"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/networkConfig",
+            "name": "[concat(parameters('externalApiAppServiceName'), '/VirtualNetwork')]",
+            "apiVersion": "2018-02-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+            "subnetResourceid": "[resourceId(parameters('sharedResourceGroupName') , 'Microsoft.Network/virtualNetworks/subnets', parameters('sharedVirtualNetworkName'), parameters('externalApiSubnetName'))]",
+            "swiftSupported": true
+            },
+            "dependsOn": [
+                "externalApiAppService"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/providers/diagnosticSettings",
+            "name": "[concat(parameters('externalApiAppServiceName'), '/Microsoft.Insights/BackendAppServiceDiagnostics')]",
+            "apiVersion": "2017-05-01-preview",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "workspaceId": "[resourceId(parameters('sharedResourceGroupName'), 'Microsoft.OperationalInsights/workspaces', parameters('sharedLogAnalyticsName'))]",
+                "logs":[
+                    {
+                        "category": "AppServiceHTTPLogs",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "days": 0,
+                            "enabled": true
+                        }
+                    },
+                    {
+                        "category": "AppServiceConsoleLogs",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "days": 0,
+                            "enabled": true
+                        }
+                    },
+                    {
+                        "category": "AppServiceAppLogs",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "days": 0,
+                            "enabled": true
+                        }
+                    },
+                    {
+                        "category": "AppServiceAuditLogs",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "days": 0,
+                            "enabled": true
+                        }
+                    },
+                    {
+                        "category": "AppServiceIPSecAuditLogs",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "days": 0,
+                            "enabled": true
+                        }
+                    },
+                    {
+                        "category": "AppServicePlatformLogs",
+                        "enabled": true
+                        ,
+                        "retentionPolicy": {
+                            "days": 0,
+                            "enabled": true
+                        }
+                    }
+                ],
+                "metrics": [
+                    {
+                        "category": "AllMetrics",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "days": 0,
+                            "enabled": true
+                        }
+                    }
+                ]
+            },
+            "dependsOn": [
+                "externalApiAppService"
+            ]
+        },
+        {
+            "apiVersion": "2019-07-01",
+            "name": "azureWebsitesProviderKvAccessPolicy",
+            "resourceGroup": "[parameters('sharedResourceGroupName')]",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                "uri": "[concat(variables('fundingBuildingBlocksUrl'),'keyvault-accesspolicies.json')]",
+                "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                "keyVaultName": {
+                    "value": "[parameters('KeyVaultName')]"
+                },
+                "accessPolicies": {
+                    "value": [
+                    {
+                        /* This is the Microsoft Azure App Service objectId, for the Microsoft.Azure.WebSites resource provider,which allows adding certificates to app service plans in this template */
+                        "tenantId": "[subscription().tenantId]",
+                        "objectId": "7c4deb1d-b373-4bfa-a6b3-b1c06ea9ce46",
+                        "permissions": {
+                        "secrets": [ "get" ]
+                        }
+                    }
+                    ]
+                }
+                }
+            }
+        }
+        // {
+        //     "apiVersion": "2017-05-10",
+        //     "name": "externalapiCert",
+        //     "type": "Microsoft.Resources/deployments",
+        //     "dependsOn": [
+        //         "externalApiAppService"
+        //     ],
+        //     "properties": {
+        //         "mode": "Incremental",
+        //         "templateLink": {
+        //             "uri": "[concat(variables('fundingBuildingBlocksUrl'),'app-service-certificate.json')]",
+        //             "contentVersion": "1.0.0.0"
+        //         },
+        //         "parameters": {
+        //             "environmentTag": {
+        //                 "value": "[parameters('environmentTag')]"
+        //             },
+        //             "parentBusinessTag": {
+        //                 "value": "[parameters('parentBusinessTag')]"
+        //             },
+        //             "portfolioTag": {
+        //                 "value": "[parameters('portfolioTag')]"
+        //             },
+        //             "productTag": {
+        //                 "value": "[parameters('productTag')]"
+        //             },
+        //             "serviceLineTag": {
+        //                 "value": "[parameters('serviceLineTag')]"
+        //             },
+        //             "keyVaultCertificateName": {
+        //                 "value": "[parameters('externalApiCertName')]"
+        //             },
+        //             "keyVaultName": {
+        //                 "value": "[parameters('keyVaultName')]"
+        //             },
+        //             "keyVaultResourceGroup": {
+        //                 "value": "[parameters('SharedResourceGroupName')]"
+        //             }
+        //         }
+        //     }
+        // },
+        // {
+        //     "apiVersion": "2019-07-01",
+        //     "name": "externalapiHostnameBinding",
+        //     "type": "Microsoft.Resources/deployments",
+        //     "dependsOn": [
+        //         "externalApiAppService",
+        //         "externalapiCert"
+        //     ],
+        //     "properties": {
+        //         "mode": "Incremental",
+        //         "templateLink": {
+        //         "uri": "[concat(variables('fundingBuildingBlocksUrl'),'app-service-hostname-bindings.json')]",
+        //         "contentVersion": "1.0.0.0"
+        //         },
+        //         "parameters": {
+        //         "appServiceName": {
+        //             "value": "[parameters('externalApiAppServiceName')]"
+        //         },
+        //         "customHostName": {
+        //             "value": "[parameters('externalapiCustomDomain')]"
+        //         },
+        //         "certificateThumbprint": {
+        //             "value": "[parameters('externalapiCertThumbprint')]"
+        //         }
+        //         }
+        //     }
+        // }
+    ]
+}

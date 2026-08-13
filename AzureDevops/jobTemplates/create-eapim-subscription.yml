@@ -1,0 +1,32 @@
+parameters:
+- name: Environment
+  type: string
+- name: ServiceConnection
+  type: string
+- name: ApimEnvironment
+  type: string
+  values:
+  - Development
+  - Test
+  - Oat
+  - Production
+- name: ProductName
+  type: string
+- name: SubscriptionUsername
+  type: string
+
+jobs:
+- deployment:  CreateSubscription${{ parameters.Environment }}
+  displayName: "Create Subscription on ${{ parameters.Environment }}"
+  environment: "Digital Forms - ${{ parameters.Environment }}"
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - task: TechTransformationEAPIMTeam.Eapim-BuildnRelease.Eapim.APIManageSubscription.EapimManageSubscriptionRelease@1
+          displayName: 'Create Subscription'
+          inputs:
+            azureSubscription: '${{ parameters.ServiceConnection }}'
+            APIProductName: '${{ parameters.ProductName }}'
+            APIUserContactEmail: '${{ parameters.SubscriptionUsername }}'
+            APIEnvironment: '${{ parameters.ApimEnvironment }}'

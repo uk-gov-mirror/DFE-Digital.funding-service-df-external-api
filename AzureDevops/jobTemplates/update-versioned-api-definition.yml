@@ -1,0 +1,102 @@
+parameters:
+- name: Environment
+  type: string
+- name: EAPIMServiceConnection
+  type: string
+- name: AzureServiceConnection
+  type: string
+- name: ApimEnvironment
+  type: string
+  values:
+  - Development
+  - Test
+  - Oat
+  - Production
+- name: ProductName
+  type: string
+- name: PublisherEmailAddress
+  type: string
+- name: ApiName
+  type: string
+- name: ApiResourceGroup
+  type: string
+- name: ApiVersion
+  type: string
+- name: ApiPath
+  type: string
+- name: ApiSwaggerDocument
+  type: string
+- name: ApiPolicyDocument
+  type: string
+- name: ApiAppServiceName
+  type: string
+- name: UpdateAppServiceFirewall
+  type: boolean
+
+jobs:
+- deployment:  CreateUpdateAPIOn${{ parameters.Environment }}
+  displayName: "Create/Update API on EAPIM in ${{ parameters.Environment }}"
+  environment: "Digital Forms - ${{ parameters.Environment }}"
+  strategy:
+    runOnce:
+      deploy:
+        steps: 
+        - task: AzureCLI@2
+          condition: ${{ parameters.UpdateAppServiceFirewall }}
+          displayName: 'Add hosted agent to app service whitelist'
+          inputs:
+            azureSubscription: '${{ parameters.AzureServiceConnection }}'
+            scriptType: pscore
+            scriptLocation: inlineScript
+            arguments: ${{ parameters.ApiResourceGroup}} ${{ parameters.ApiName }}
+            inlineScript: |
+              $agentAddress = Invoke-RestMethod http://ipinfo.io/json | Select -exp ip
+              $ruleName = "HostedAgent_$agentAddress"
+              $targetResourceGroup = "${{ parameters.ApiResourceGroup }}"
+              $targetAppService = "${{ parameters.ApiAppServiceName }}"
+              Write-Host "Hosted agent is at $agentAddress"
+              Write-Host "Adding firewall rule  '$ruleName' on '$targetAppService' in resource group '$targetResourceGroup' for ip '$agentAddress'"
+              az webapp config access-restriction add --priority 200 --resource-group "$targetResourceGroup" --action Allow --name "$targetAppService" --rule-name "$ruleName" --ip-address $agentAddress
+              Write-Host "Firewall rule added"
+
+        - task: Powershell@2
+          displayName: 'Get Swagger definition from web app'
+          inputs:
+            targetType: filePath
+            filePath: $(Pipeline.Workspace)/FundingDataService.ArmTemplates.Scripts/Get-SwaggerJsonForEAPIM.ps1
+            arguments: -WebAppName "${{ parameters.ApiAppServiceName }}.azurewebsites.net" -OutputFile "${{ parameters.ApiSwaggerDocument }}"
+            pwsh: true
+
+        - task: AzureCLI@2
+          condition: ${{ parameters.UpdateAppServiceFirewall }}
+          displayName: 'Remove hosted agent from app service whitelist'
+          inputs:
+            azureSubscription: '${{ parameters.AzureServiceConnection }}'
+            scriptType: pscore
+            scriptLocation: inlineScript
+            inlineScript: |
+              $agentAddress = Invoke-RestMethod http://ipinfo.io/json | Select -exp ip
+              $ruleName = "HostedAgent_$agentAddress"
+              $targetResourceGroup = "${{ parameters.ApiResourceGroup }}"
+              $targetAppService = "${{ parameters.ApiAppServiceName }}"
+              Write-Host "Hosted agent is at $agentAddress"
+              Write-Host "Removing firewall rule  '$ruleName' on '$targetAppService' in resource group '$targetResourceGroup' for ip '$agentAddress'"
+              az webapp config access-restriction remove --resource-group "$targetResourceGroup" --action Allow --name "$targetAppService" --rule-name "$ruleName" --ip-address $agentAddress
+              Write-Host "Firewall rule removed"
+
+        - task: TechTransformationEAPIMTeam.Eapim-BuildnRelease.Eapim.APIPublishv2.EapimAPIBuildnRelease@1
+          displayName: 'Create versioned api'
+          inputs:
+            azureSubscription: '${{ parameters.EAPIMServiceConnection }}'
+            APIEnvironment: '${{ parameters.ApimEnvironment }}'
+            APIPublisherContactEmail: '${{ parameters.PublisherEmailAddress }}'
+            APIProductName: '${{ parameters.ProductName }}'
+            APIName: '${{ parameters.ApiName }}'
+            APIVersionset: true
+            VersionName: ${{ parameters.ApiVersion }}
+            VersionSetID: ${{ parameters.ApiVersion }}
+            VersionQueryHeaderName: version
+            APIVersionID: ${{ parameters.ApiVersion }}
+            APISchema:  ${{ parameters.ApiSwaggerDocument }}
+            APIPath: '${{ parameters.ApiPath }}'
+            APIPolicy: '${{ parameters.ApiPolicyDocument }}'

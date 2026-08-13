@@ -1,0 +1,39 @@
+﻿parameters:
+- name: AzureServiceConnection
+  type: string
+- name: Environment
+  type: string
+
+jobs:
+- deployment: DeployTo${{ parameters.Environment }}
+  displayName: "Deploy To ${{ parameters.Environment }}"
+  environment: "Digital Forms - ${{ parameters.Environment }}"
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - task: AzureResourceManagerTemplateDeployment@3
+          displayName: 'ARM Template deployment: Resource Group scope'
+          inputs:
+            azureResourceManagerConnection: '${{ parameters.AzureServiceConnection }}'
+            subscriptionId: '$(AzureSubscription)'
+            resourceGroupName: '$(AppServicesResouceGroupName)'
+            location: 'UK South'
+            csmFile: '$(Pipeline.Workspace)/DigitalForms.ArmTemplates.ExternalApi/Templates/template.json'
+            overrideParameters: '-environmentTag "$(EnvironmentTag)" -parentBusinessTag "$(ParentBusinessTag)" -portfolioTag "$(PortfolioTag)" -productTag "$(ProductTag)" -serviceLineTag "$(ServiceLineTag)" -serviceTag "$(ServiceTag)" -serviceOfferingTag "$(ServiceOfferingTag)" -sharedResourceGroupName "$(SharedResourceGroupName)" -applicationInsightsName "$(SharedAppInsightsName)" -keyVaultName "$(SharedKeyVaultName)" -externalApiAppServicePlanName "$(ExternalApiAppServicePlanName)" -externalApiAppServiceName "$(ExternalApiAppServiceName)" -sharedVirtualNetworkName "$(SharedVirtualNetworkName)" -externalApiSubnetName "$(ExternalApiSubnetName)" -sharedLogAnalyticsName "$(SharedLogAnalyticsName)" -FauAPIIPAddress "$(FauAPIIPAddress)" -WAFIPAddress "$(WAFIPAddress)" -apimIpAddresses "$(EapimIpAddresses)"'
+
+        - task: AzureCLI@2
+          displayName: Upload transform file to app service
+          inputs:
+            azureSubscription: '${{ parameters.AzureServiceConnection }}'
+            scriptType: pscore
+            scriptLocation: inlineScript
+            inlineScript: |
+              $(Pipeline.Workspace)/DigitalForms.ArmTemplates.ExternalApi/Scripts/Upload-ApplicationHostToWebApp.ps1 -ResourceGroupName "$(AppServicesResouceGroupName)" -WebAppName "$(ExternalApiAppServiceName)" -SourcePath "$(Pipeline.Workspace)/DigitalForms.ArmTemplates.ExternalApi/Transforms/applicationhost.xdt" -TargetPath "/site/applicationhost.xdt"
+
+        - task: AzureRmWebAppDeployment@4
+          displayName: 'Azure App Service Deploy: $(ExternalApiAppServiceName)'
+          inputs:
+            azureSubscription: '${{ parameters.AzureServiceConnection }}'
+            WebAppName: '$(ExternalApiAppServiceName)'
+            packageForLinux:  '$(Pipeline.Workspace)/digital-form-api_$(Build.BuildNumber)/DigitalForms.API.zip'
