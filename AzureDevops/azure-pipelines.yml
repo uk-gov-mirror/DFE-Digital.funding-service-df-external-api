@@ -55,6 +55,7 @@ stages:
       Environment: DataScience
 
 - stage: DeployToProduction
+  dependsOn: DeployToPreProd
   condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))
   variables:
   - template: variableTemplates\prod.yml
