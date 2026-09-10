@@ -42,16 +42,16 @@
                 "description": "Resource name for the key vault"
             }
         },
-        "externalApiAppServicePlanName": {
+        "externalApiLinuxAppServicePlanName": {
             "type": "string",
             "metadata": {
-                "description": "The name of the shared app service plan"
+                "description": "The name of the linux shared app service plan"
             }
         },
-        "externalApiAppServiceName": {
+        "externalApiLinuxAppServiceName": {
             "type": "string",
             "metadata": {
-                "description": "The name for this app service"
+                "description": "The linux name for this app service"
             }
         },
         "sharedVirtualNetworkName": {
@@ -211,7 +211,7 @@
     "resources": [
         {
             "apiVersion": "2017-05-10",
-            "name": "externalApiAppService",
+            "name": "externalApiLinuxAppService",
             "type": "Microsoft.Resources/deployments",
             "properties": {
                 "mode": "Incremental",
@@ -242,10 +242,10 @@
                         "value": "[parameters('serviceOfferingTag')]"
                     },
                     "appServiceName": {
-                        "value": "[parameters('externalApiAppServiceName')]"
+                        "value": "[parameters('externalApiLinuxAppServiceName')]"
                     },
                     "appServicePlanName": {
-                        "value": "[parameters('externalApiAppServicePlanName')]"
+                        "value": "[parameters('externalApiLinuxAppServicePlanName')]"
                     },
                     "appServicePlanResourceGroup": {
                         "value": "[parameters('sharedResourceGroupName')]"
@@ -329,19 +329,19 @@
                                 "value": 1
                             },
                             {
-                                "name": "ConnectionStrings:DFSqlDb",
+                                "name": "ConnectionStrings__DFSqlDb",
                                 "value": "[concat('@Microsoft.KeyVault(VaultName=', parameters('keyVaultName'), ';SecretName=SharedDatabaseConnectionString)')]"
                             },
                             {
-                                "name": "Logging:LogLevel:Default",
+                                "name": "Logging_LogLevel_Default",
                                 "value": "Information"
                             },
                             {
-                                "name": "Logging:LogLevel:Microsoft.AspNetCore",
+                                "name": "Logging_LogLevel_Microsoft_AspNetCore",
                                 "value": "Warning"
                             },
                             {
-                                "name": "Logging:LogLevel:Microsoft.EntityFrameworkCore.Database.Command",
+                                "name": "Logging_LogLevel_Microsoft_EntityFrameworkCore_Database_Command",
                                 "value": "Warning"
                             }
                         ]
@@ -355,7 +355,7 @@
             "resourceGroup": "[parameters('sharedResourceGroupName')]",
             "type": "Microsoft.Resources/deployments",
             "dependsOn": [
-                "externalApiAppService"
+                "externalApiLinuxAppService"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -371,7 +371,7 @@
                         "value": [
                             {
                                 "tenantId": "[subscription().tenantId]",
-                                "objectId": "[reference('externalApiAppService').outputs.managedServiceIdentityId.value]",
+                                "objectId": "[reference('externalApiLinuxAppService').outputs.managedServiceIdentityId.value]",
                                 "permissions": {
                                     "secrets": [
                                         "list",
@@ -386,7 +386,7 @@
         },
         {
             "type": "Microsoft.Web/sites/networkConfig",
-            "name": "[concat(parameters('externalApiAppServiceName'), '/VirtualNetwork')]",
+            "name": "[concat(parameters('externalApiLinuxAppServiceName'), '/VirtualNetwork')]",
             "apiVersion": "2018-02-01",
             "location": "[resourceGroup().location]",
             "properties": {
@@ -394,12 +394,12 @@
             "swiftSupported": true
             },
             "dependsOn": [
-                "externalApiAppService"
+                "externalApiLinuxAppService"
             ]
         },
         {
             "type": "Microsoft.Web/sites/providers/diagnosticSettings",
-            "name": "[concat(parameters('externalApiAppServiceName'), '/Microsoft.Insights/BackendAppServiceDiagnostics')]",
+            "name": "[concat(parameters('externalApiLinuxAppServiceName'), '/Microsoft.Insights/BackendAppServiceDiagnostics')]",
             "apiVersion": "2017-05-01-preview",
             "location": "[resourceGroup().location]",
             "properties": {
@@ -467,7 +467,7 @@
                 ]
             },
             "dependsOn": [
-                "externalApiAppService"
+                "externalApiLinuxAppService"
             ]
         },
         {
@@ -505,7 +505,7 @@
         //     "name": "externalapiCert",
         //     "type": "Microsoft.Resources/deployments",
         //     "dependsOn": [
-        //         "externalApiAppService"
+        //         "externalApiLinuxAppService"
         //     ],
         //     "properties": {
         //         "mode": "Incremental",
@@ -546,7 +546,7 @@
         //     "name": "externalapiHostnameBinding",
         //     "type": "Microsoft.Resources/deployments",
         //     "dependsOn": [
-        //         "externalApiAppService",
+        //         "externalApiLinuxAppService",
         //         "externalapiCert"
         //     ],
         //     "properties": {
@@ -557,7 +557,7 @@
         //         },
         //         "parameters": {
         //         "appServiceName": {
-        //             "value": "[parameters('externalApiAppServiceName')]"
+        //             "value": "[parameters('externalApiLinuxAppServiceName')]"
         //         },
         //         "customHostName": {
         //             "value": "[parameters('externalapiCustomDomain')]"
