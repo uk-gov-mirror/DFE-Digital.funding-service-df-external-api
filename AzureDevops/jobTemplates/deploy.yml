@@ -20,7 +20,7 @@ jobs:
             resourceGroupName: '$(AppServicesResouceGroupName)'
             location: 'UK South'
             csmFile: '$(Pipeline.Workspace)/DigitalForms.ArmTemplates.ExternalApi/Templates/template.json'
-            overrideParameters: '-environmentTag "$(EnvironmentTag)" -parentBusinessTag "$(ParentBusinessTag)" -portfolioTag "$(PortfolioTag)" -productTag "$(ProductTag)" -serviceLineTag "$(ServiceLineTag)" -serviceTag "$(ServiceTag)" -serviceOfferingTag "$(ServiceOfferingTag)" -sharedResourceGroupName "$(SharedResourceGroupName)" -applicationInsightsName "$(SharedAppInsightsName)" -keyVaultName "$(SharedKeyVaultName)" -externalApiAppServicePlanName "$(ExternalApiAppServicePlanName)" -externalApiAppServiceName "$(ExternalApiAppServiceName)" -sharedVirtualNetworkName "$(SharedVirtualNetworkName)" -externalApiSubnetName "$(ExternalApiSubnetName)" -sharedLogAnalyticsName "$(SharedLogAnalyticsName)" -FauAPIIPAddress "$(FauAPIIPAddress)" -WAFIPAddress "$(WAFIPAddress)" -apimIpAddresses "$(EapimIpAddresses)"'
+            overrideParameters: '-environmentTag "$(EnvironmentTag)" -parentBusinessTag "$(ParentBusinessTag)" -portfolioTag "$(PortfolioTag)" -productTag "$(ProductTag)" -serviceLineTag "$(ServiceLineTag)" -serviceTag "$(ServiceTag)" -serviceOfferingTag "$(ServiceOfferingTag)" -sharedResourceGroupName "$(SharedResourceGroupName)" -applicationInsightsName "$(SharedAppInsightsName)" -keyVaultName "$(SharedKeyVaultName)" -externalApiLinuxAppServicePlanName "$(ExternalApiLinuxAppServicePlanName)" -externalApiLinuxAppServiceName "$(ExternalApiLinuxAppServiceName)"  -sharedVirtualNetworkName "$(SharedVirtualNetworkName)" -externalApiSubnetName "$(ExternalApiSubnetName)" -sharedLogAnalyticsName "$(SharedLogAnalyticsName)" -FauAPIIPAddress "$(FauAPIIPAddress)" -WAFIPAddress "$(WAFIPAddress)" -apimIpAddresses "$(EapimIpAddresses)"'
 
         - task: AzureCLI@2
           displayName: Upload transform file to app service
@@ -29,11 +29,11 @@ jobs:
             scriptType: pscore
             scriptLocation: inlineScript
             inlineScript: |
-              $(Pipeline.Workspace)/DigitalForms.ArmTemplates.ExternalApi/Scripts/Upload-ApplicationHostToWebApp.ps1 -ResourceGroupName "$(AppServicesResouceGroupName)" -WebAppName "$(ExternalApiAppServiceName)" -SourcePath "$(Pipeline.Workspace)/DigitalForms.ArmTemplates.ExternalApi/Transforms/applicationhost.xdt" -TargetPath "/site/applicationhost.xdt"
+              $(Pipeline.Workspace)/DigitalForms.ArmTemplates.ExternalApi/Scripts/Upload-ApplicationHostToWebApp.ps1 -ResourceGroupName "$(AppServicesResouceGroupName)" -WebAppName "$(ExternalApiLinuxAppServiceName)" -SourcePath "$(Pipeline.Workspace)/DigitalForms.ArmTemplates.ExternalApi/Transforms/applicationhost.xdt" -TargetPath "/site/applicationhost.xdt"
 
         - task: AzureRmWebAppDeployment@4
-          displayName: 'Azure App Service Deploy: $(ExternalApiAppServiceName)'
+          displayName: 'Azure App Service Deploy: $(ExternalApiLinuxAppServiceName)'
           inputs:
             azureSubscription: '${{ parameters.AzureServiceConnection }}'
-            WebAppName: '$(ExternalApiAppServiceName)'
+            WebAppName: '$(ExternalApiLinuxAppServiceName)'
             packageForLinux:  '$(Pipeline.Workspace)/digital-form-api_$(Build.BuildNumber)/DigitalForms.API.zip'

@@ -12,10 +12,10 @@
             "value": "Education and Skills Funding Agency"
         },
         "productTag": {
-            "value": "Funding Data Service"
+            "value": "Funding Service Digital Forms"
         },
         "serviceTag": {
-            "value": "Funding and Allocations (ESFA)"
+            "value": "Funding and Allocations"
         },
         "serviceLineTag": {
             "value": "Funding"
@@ -29,11 +29,11 @@
         "keyVaultName": {
             "value": "aKeyVaultInstance"
         },
-        "externalApiAppServicePlanName": {
-            "value": "aHostingPlan"
+        "externalApiLinuxAppServicePlanName": {
+            "value": "aLinuxHostingPlan"
         },
-        "externalApiAppServiceName": {
-            "value": "anAppService"
+        "externalApiLinuxAppServiceName": {
+            "value": "anLinuxAppService"
         },
         "sharedVirtualNetworkName": {
             "value": "AVirtualNetwork"

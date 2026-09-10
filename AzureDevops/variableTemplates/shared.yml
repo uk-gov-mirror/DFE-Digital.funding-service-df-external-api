@@ -2,8 +2,8 @@ variables:
   # Public API configuration
   AppServicesResouceGroupName: $(ResourcePrefix)rg-uks-df-app-services
   SharedResourceGroupName: $(ResourcePrefix)rg-uks-df-shared  
-  ExternalApiAppServiceName: $(ResourcePrefix)as-df-external
-  ExternalApiAppServicePlanName: $(ResourcePrefix)asp-df-external
+  ExternalApiLinuxAppServiceName: $(ResourcePrefix)as-df-external-linux
+  ExternalApiLinuxAppServicePlanName: $(ResourcePrefix)asp-df-external-linux
   SharedKeyVaultName: $(ResourcePrefix)kv-df-shared
   SharedAppInsightsName: $(ResourcePrefix)ai-df-shared
   SharedLogAnalyticsName: $(ResourcePrefix)la-df-shared
