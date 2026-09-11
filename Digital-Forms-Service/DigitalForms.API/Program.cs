@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Serialization;
 using System.Configuration;
 using System.Text.Json.Serialization;
+using Microsoft.OpenApi;
 //using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -55,20 +56,22 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.CustomSchemaIds(type => type.FullName);
 });
- 
+
 var app = builder.Build();
 
-// DfE EAPIM can't handle OpenAPI v3 yet, so we have to enable force v2.
-app.UseSwagger(c => c.SerializeAsV2 = true);
+app.UseSwagger(options =>
+{
+    options.OpenApiVersion = OpenApiSpecVersion.OpenApi2_0;
+});
+
+//// If OpenAPI v2 is required, update configuration here. Default generation uses OpenAPI v3.
+//app.UseSwagger();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger(options =>
-    {
-        options.SerializeAsV2 = true;
-    });
     app.UseSwaggerUI();
+
 }
 
 app.UseHttpsRedirection();

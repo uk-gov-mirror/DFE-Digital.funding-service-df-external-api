@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using DigitalForms.BL.Models;
 using DigitalForms.BL.Models.Generated;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IdentityModel.Tokens;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace DigitalForms.BL.Serialized.Models
 {
@@ -44,7 +46,7 @@ namespace DigitalForms.BL.Serialized.Models
                 //.ForMember(dest => dest.feedback, act => act.MapFrom(src => src.Fs.Forms))
                 //.ForMember(dest => dest.phaseBanner, act => act.MapFrom(src => src.Fs.Forms))
                 //.ForMember(dest => dest.lists, act => act.MapFrom(src => src.Lists))
-                .ForMember(dest => dest.file, act => act.MapFrom(src => (src.File.IsNullOrEmpty() ? "" : src.File)))
+                .ForMember(dest => dest.file, act => act.MapFrom(src => (string.IsNullOrEmpty(src.File) ? "" : src.File)))
                 //.ForMember(dest => dest.sections, act => act.MapFrom(src => src.Sections))
 
                 ////NEED TO CHK AGAIN
@@ -353,7 +355,7 @@ namespace DigitalForms.BL.Serialized.Models
                .ForMember(dest => dest.TemplateId, act => act.MapFrom(src => src.TemplateId))
                .ReverseMap();
 
-            });
+            }, NullLoggerFactory.Instance);
             return config.CreateMapper();
         });
 
@@ -379,7 +381,7 @@ namespace DigitalForms.BL.Serialized.Models
                    .ForMember(dest => dest.EmailSentOn, act => act.MapFrom(src => src.EmailSentOn))
                    .ForMember(dest => dest.id, act => act.MapFrom(src => src.id))
                    .ForMember(dest => dest.TemplateId, act => act.MapFrom(src => src.TemplateId));
-            });
+            }, NullLoggerFactory.Instance);
             return config.CreateMapper();
         });
 
@@ -396,7 +398,7 @@ namespace DigitalForms.BL.Serialized.Models
                    .ForMember(dest => dest.sourceSystem, act => act.MapFrom(src => src.sourceSystem))
                    .ForMember(dest => dest.fileId, act => act.MapFrom(src => src.fileId))
                    .ForMember(dest => dest.scanStatus, act => act.MapFrom(src => src.scanStatus)).ReverseMap();
-            });
+            }, NullLoggerFactory.Instance);
             return config.CreateMapper();
         });
 
@@ -501,7 +503,7 @@ namespace DigitalForms.BL.Serialized.Models
                 .ForMember(dest => dest.MtdtId, act => act.MapFrom(src => src.MtdtId))
                 .ForMember(dest => dest.isUAT, act => act.MapFrom(src => src.isUAT))
                 .ReverseMap();
-            });
+            }, NullLoggerFactory.Instance);
             return config.CreateMapper();
         });
         public static IMapper ResponseMapper => _responseMapper.Value;
@@ -509,51 +511,51 @@ namespace DigitalForms.BL.Serialized.Models
         private static readonly Lazy<IMapper> _draftResponseMapper = new Lazy<IMapper>(() =>
         {
             var config = new MapperConfiguration(cfg =>
-              {
-                  cfg.CreateMap<BL.Serialized.Models.Output, BL.Models.Output>().ReverseMap();
-                  cfg.CreateMap<BL.Serialized.Models.Responses, BL.Models.Response>().ReverseMap();
+            {
+                cfg.CreateMap<BL.Serialized.Models.Output, BL.Models.Output>().ReverseMap();
+                cfg.CreateMap<BL.Serialized.Models.Responses, BL.Models.Response>().ReverseMap();
 
-                  // Mapping from BL.Models.DraftResponse to Serialized.Models.DraftResponse
-                  cfg.CreateMap<BL.Models.DraftResponse, BL.Serialized.Models.DraftResponse>()
-                     .ForMember(dest => dest.Id, act => act.MapFrom(src => src.Id))
-                     // .ForMember(dest => dest.OrgUKPRN, act => act.Ignore())
-                     //.ForMember(dest => dest.DsiSignInEmail, act => act.Ignore())
-                     .ForMember(dest => dest.Progress, act => act.Ignore())
-                     .ForMember(dest => dest.FormData, act => act.Ignore())
-                     .ForMember(dest => dest.DataImportStatus, act => act.Ignore())
-                     .ForMember(dest => dest.PreviousPage, act => act.Ignore())
-                     .ForMember(dest => dest.SelectField, act => act.Ignore())
-                     .ForMember(dest => dest.Reference, act => act.MapFrom(src => src.Reference))
-                     .ForMember(dest => dest.ReferenceIsStored, act => act.MapFrom(src => src.ReferenceIsStored))
-                     .ForMember(dest => dest.UserCompletedSummary, act => act.MapFrom(src => src.UserCompletedSummary))
-                     .ForMember(dest => dest.FormDataId, act => act.MapFrom(src => src.FormDataId))
-                     .ForMember(dest => dest.Formid, act => act.MapFrom(src => src.Formid))
-                     .ForMember(dest => dest.outputs, act => act.Ignore());
+                // Mapping from BL.Models.DraftResponse to Serialized.Models.DraftResponse
+                cfg.CreateMap<BL.Models.DraftResponse, BL.Serialized.Models.DraftResponse>()
+                   .ForMember(dest => dest.Id, act => act.MapFrom(src => src.Id))
+                   // .ForMember(dest => dest.OrgUKPRN, act => act.Ignore())
+                   //.ForMember(dest => dest.DsiSignInEmail, act => act.Ignore())
+                   .ForMember(dest => dest.Progress, act => act.Ignore())
+                   .ForMember(dest => dest.FormData, act => act.Ignore())
+                   .ForMember(dest => dest.DataImportStatus, act => act.Ignore())
+                   .ForMember(dest => dest.PreviousPage, act => act.Ignore())
+                   .ForMember(dest => dest.SelectField, act => act.Ignore())
+                   .ForMember(dest => dest.Reference, act => act.MapFrom(src => src.Reference))
+                   .ForMember(dest => dest.ReferenceIsStored, act => act.MapFrom(src => src.ReferenceIsStored))
+                   .ForMember(dest => dest.UserCompletedSummary, act => act.MapFrom(src => src.UserCompletedSummary))
+                   .ForMember(dest => dest.FormDataId, act => act.MapFrom(src => src.FormDataId))
+                   .ForMember(dest => dest.Formid, act => act.MapFrom(src => src.Formid))
+                   .ForMember(dest => dest.outputs, act => act.Ignore());
 
-                  cfg.CreateMap<BL.Serialized.Models.DraftResponse, BL.Models.DraftResponse>()
-                     .ForMember(dest => dest.Outputs, opt => opt.MapFrom(src => src.outputs.FirstOrDefault()));
+                cfg.CreateMap<BL.Serialized.Models.DraftResponse, BL.Models.DraftResponse>()
+                   .ForMember(dest => dest.Outputs, opt => opt.MapFrom(src => src.outputs.FirstOrDefault()));
 
 
-                  cfg.CreateMap<BL.Serialized.Models.Users, BL.Models.UserDetail>()
-                      .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.id))
-                      .ForMember(dest => dest.Uid, opt => opt.MapFrom(src => src.userid))
-                      .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.email))
-                      .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.name))
-                      .ForMember(dest => dest.Status, opt => opt.Ignore())
-                      .ForMember(dest => dest.UserOrganisationDetails, opt => opt.Ignore())
-                      .ForMember(dest => dest.Responses, opt => opt.Ignore())
-                      .ForMember(dest => dest.FormLastUpdatedByUsers, opt => opt.Ignore())
-                      .ForMember(dest => dest.FormCreatedByUsers, opt => opt.Ignore())
-                      .ReverseMap();
+                cfg.CreateMap<BL.Serialized.Models.Users, BL.Models.UserDetail>()
+                    .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.id))
+                    .ForMember(dest => dest.Uid, opt => opt.MapFrom(src => src.userid))
+                    .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.email))
+                    .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.name))
+                    .ForMember(dest => dest.Status, opt => opt.Ignore())
+                    .ForMember(dest => dest.UserOrganisationDetails, opt => opt.Ignore())
+                    .ForMember(dest => dest.Responses, opt => opt.Ignore())
+                    .ForMember(dest => dest.FormLastUpdatedByUsers, opt => opt.Ignore())
+                    .ForMember(dest => dest.FormCreatedByUsers, opt => opt.Ignore())
+                    .ReverseMap();
 
-                  cfg.CreateMap<BL.Serialized.Models.Organization, BL.Models.OrganisationDetail>()
-                      .ForMember(dest => dest.Name, act => act.MapFrom(src => src.name))
-                      .ForMember(dest => dest.Ukprn, act => act.MapFrom(src => src.ukprn))
-                      .ForMember(dest => dest.Urn, act => act.MapFrom(src => src.urn))
-                      .ForMember(dest => dest.AdminCode, act => act.MapFrom(src => src.ukprn))
-                      .ReverseMap();
+                cfg.CreateMap<BL.Serialized.Models.Organization, BL.Models.OrganisationDetail>()
+                    .ForMember(dest => dest.Name, act => act.MapFrom(src => src.name))
+                    .ForMember(dest => dest.Ukprn, act => act.MapFrom(src => src.ukprn))
+                    .ForMember(dest => dest.Urn, act => act.MapFrom(src => src.urn))
+                    .ForMember(dest => dest.AdminCode, act => act.MapFrom(src => src.ukprn))
+                    .ReverseMap();
 
-              });
+            }, NullLoggerFactory.Instance);
             return config.CreateMapper();
         });
 
@@ -660,7 +662,7 @@ namespace DigitalForms.BL.Serialized.Models
                 cfg.CreateMap<ProvidersData, URNProvidersData>()
                 .ForMember(dest => dest.Urn, act => act.MapFrom(src => src.URN.ToArray().Select(s => Convert.ToInt32(s.ToString()))));
 
-            });
+            }, NullLoggerFactory.Instance);
             var mapper = new Mapper(config);
             return mapper;
         }
@@ -805,7 +807,7 @@ namespace DigitalForms.BL.Serialized.Models
                 cfg.CreateMap<BL.Models.Form, BL.Models.Form>()
                     .ForMember(dest => dest.Fid, opt => opt.Ignore());
 
-            });
+            }, NullLoggerFactory.Instance);
             var mapper = new Mapper(config);
             return mapper;
         }
@@ -905,7 +907,7 @@ namespace DigitalForms.BL.Serialized.Models
 
 
 
-            });
+            }, NullLoggerFactory.Instance);
             var mapper = new Mapper(config);
             return mapper;
         }
