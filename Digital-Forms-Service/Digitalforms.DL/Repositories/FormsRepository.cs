@@ -20,15 +20,15 @@ namespace DigitalForms.DL.Repositories
 {
     public class FormsRepository : GenericRepository<Form>, IFormsRepository
     {
-        public FormsRepository(DFSqlContext context, s255d01dbDfSharedContext readcontext ) : base(context,readcontext)
+        public FormsRepository(DFSqlContext context, s255d01dbDfSharedContext readcontext) : base(context, readcontext)
         {
             context.Database.SetCommandTimeout(180);
         }
-        public IEnumerable<Form> getConfiguration(string formId, bool usereadcontext=false)
+        public IEnumerable<Form> getConfiguration(string formId, bool usereadcontext = false)
         {
 
             if (usereadcontext)
-            {               
+            {
 
                 var data = _readcontext.Forms.Where(w => formId != string.Empty ? w.FormId == formId : w.Fid > 0).Where(ws => ws.Status == true)
                  .Include(d => d.Pages).ThenInclude(d => d.PageChildSettings)
@@ -53,12 +53,12 @@ namespace DigitalForms.DL.Repositories
                  .Include(d => d.ParentChild).ThenInclude(d => d.ParentChildConfig).ThenInclude(d => d.ChildConfigs).ThenInclude(d => d.DependentForms)
 
                  .AsSplitQuery()
-                 .ToList();               
+                 .ToList();
                 return data;
             }
             else
             {
-               
+
                 var data = _context.Forms.Where(w => formId != string.Empty ? w.FormId == formId : w.Fid > 0).Where(ws => ws.Status == true)
                  .Include(d => d.Pages).ThenInclude(d => d.PageChildSettings)
                  .Include(d => d.Pages).ThenInclude(d => d.Components.OrderBy(o => o.CmpOrder)).ThenInclude(d => d.ComponentAdditionalSettings)
@@ -82,17 +82,17 @@ namespace DigitalForms.DL.Repositories
                  .Include(d => d.ParentChild).ThenInclude(d => d.ParentChildConfig).ThenInclude(d => d.ChildConfigs).ThenInclude(d => d.DependentForms)
 
                  .AsSplitQuery()
-                 .ToList();               
+                 .ToList();
                 return data;
             }
-        }        
+        }
         public ParentDetail getParentById(string formId)
         {
             string data = _context.ChildConfigs.Where(w => w.ChildId == formId)?.Select(s => s.ParentId).FirstOrDefault();
-            if (data.IsNullOrEmpty())
+            if (string.IsNullOrEmpty(data))
                 data = _context.DependentForms.Where(w => w.FormId == formId)?.Select(s => s.MainParentId).FirstOrDefault();
 
-            if (!data.IsNullOrEmpty())
+            if (!string.IsNullOrEmpty(data))
                 return _context.Forms.Where(w => w.FormId == data)?.Select(s => new ParentDetail { parentId = s.FormId, parentName = s.Displayname }).FirstOrDefault();
             else
                 return null;
@@ -109,11 +109,11 @@ namespace DigitalForms.DL.Repositories
                 .Distinct()
                 .ToHashSet();
 
-            List<Form> forms = _context.Forms.Where(w=> allFormIds.Contains(w.FormId)).ToList();
+            List<Form> forms = _context.Forms.Where(w => allFormIds.Contains(w.FormId)).ToList();
 
             foreach (ChildConfiguration item in ParentChild.parentChildConfig.childConfigs)
             {
-               Form selectedform = forms.Where(w=>w.FormId == item.childId).FirstOrDefault();
+                Form selectedform = forms.Where(w => w.FormId == item.childId).FirstOrDefault();
                 item.childFormName = selectedform.Displayname;
                 item.childFormTitle = selectedform.Name;
                 foreach (Dependentform dependentform in item.dependentforms)
@@ -182,7 +182,7 @@ namespace DigitalForms.DL.Repositories
             return form?.Fid ?? 0;
         }
         public IEnumerable<Form> listFormConfigurations()
-        {           
+        {
             var data = _context.Forms.Where(ws => ws.Status == true)
                         .Include(d => d.CreatedByUser)//.ThenInclude(d => d.OrganisationDetails)
                         .Include(d => d.LastUpdatedByUser)//.ThenInclude(d => d.OrganisationDetails)
@@ -190,7 +190,7 @@ namespace DigitalForms.DL.Repositories
                         .Include(d => d.ParentChild).ThenInclude(d => d.ParentChildConfig).ThenInclude(s => s.ChildConfigs).ThenInclude(s => s.DependentForms)
                         .AsSplitQuery()
                         .ToList();
-           
+
             return data;
         }
         public IEnumerable<KeyValuePair<string, string>> GetAllChild()
@@ -216,11 +216,11 @@ namespace DigitalForms.DL.Repositories
 
         public IEnumerable<TblId> GetIdGeneration()
         {
-           
+
             var data = _context.TblIds
                         .AsSplitQuery()
                         .ToList();
-           
+
             return data;
         }
 
@@ -250,6 +250,11 @@ namespace DigitalForms.DL.Repositories
         {
             return _context.UserDetails
                 .Where(w => w.UserId == userId);
+        }
+        public async Task<List<UserDetail>> GetAllUserDetails()
+        {
+            List<UserDetail> data = await _context.UserDetails.AsSplitQuery().ToListAsync();
+            return data;
         }
         //public IEnumerable<OrganisationDetail> GetOrganisationDetail(string Ukprn)
         //{
